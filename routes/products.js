@@ -45,13 +45,14 @@ router.post('/upload', upload.array("images"), async (req, res) => {
         imagesArr.push(files[i].filename);
     }
 
-    res.send(imagesArr);
+    return res.send(imagesArr);
 
 })
 
 router.get('/', async (req,res)=>{
+
     const page = parseInt(req.query.page) || 1;
-    const perPage = 10;
+    const perPage = 12;
     const totalPosts = await Product.countDocuments();
     const totalPages = Math.ceil(totalPosts / perPage);
     if (page > totalPages) {
@@ -63,10 +64,9 @@ router.get('/', async (req,res)=>{
             .limit(perPage)
             .exec();
 
-    // const productList = await Product.find().populate("category");
 
     if(!productList){
-        res.status(500).json({success: false})
+        return res.status(500).json({success: false})
     }
 
     return res.status(200).json({
@@ -74,7 +74,17 @@ router.get('/', async (req,res)=>{
         "totalPages":totalPages,
         "page":page
     })
-    res.send(productList);
+    return res.send(productList);
+})
+
+router.get('/newProduct', async (req,res)=>{
+    const productList = await Product.find({isNewProduct: true}).populate("category brand");
+
+    if(!productList){
+        return res.status(500).json({success: false})
+    }
+
+    return res.status(200).json(productList)
 })
 
 router.get('/:id', async (req, res) => {
@@ -83,7 +93,7 @@ router.get('/:id', async (req, res) => {
     const product = await Product.findById(req.params.id).populate("category brand")
 
     if(!product) {
-        res.status(500).json({ message: 'The product with the given id was not found.'})
+        return res.status(500).json({ message: 'The product with the given id was not found.'})
     }
     
     return res.status(200).send(product);
@@ -107,19 +117,21 @@ router.post('/create', async (req,res)=>{
         brand:req.body.brand,
         countInStock:req.body.countInStock,
         rating:req.body.rating,
-        isPromotion:req.body.isPromotion,
+        isNewProduct:req.body.isNewProduct,
         dateCreated:req.body.dateCreated,
+        productSize:req.body.productSize,
+        productColor:req.body.productColor,
         images:imagesArr
     });
 
     product = await product.save();
     if(!product){
-        res.status(500).json({
+        return res.status(500).json({
             error: err,
             success: false
         })
     }
-    res.status(201).json(product);
+    return res.status(201).json(product);
 })
 
 router.delete('/:id', async(req,res)=>{
@@ -141,7 +153,7 @@ router.delete('/:id', async(req,res)=>{
         })
     }
 
-    res.status(200).send({
+    return res.status(200).send({
         message: "the product is deleted",
         status: true
     })
@@ -161,7 +173,7 @@ router.put('/:id', async(req,res)=>{
             brand:req.body.brand,
             countInStock:req.body.countInStock,
             rating:req.body.rating,
-            isPromotion:req.body.isPromotion,
+            isNewProduct:req.body.isNewProduct,
             dateCreated:req.body.dateCreated,
             images:imagesArr,
         },
@@ -169,13 +181,13 @@ router.put('/:id', async(req,res)=>{
     );
 
     if(!product){
-        res.status(404).json({
+        return res.status(404).json({
             message: 'the product can not is updated',
             status: false
         })
     }
 
-    res.status(200).json({
+    return res.status(200).json({
         message: 'the product is updated',
         status: true
     })

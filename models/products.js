@@ -43,7 +43,7 @@ const productSchema = mongoose.Schema({
         type:Number,
         default: 0
     },
-    isPromotion:{
+    isNewProduct:{
         type:Boolean,
         default: false
     },
@@ -51,6 +51,21 @@ const productSchema = mongoose.Schema({
         {
             type: String,
             required: true
+        }
+    ],
+    productSize:[
+        {
+            type: String,
+            default:null
+            // required: true
+        }
+    ],
+    productColor:[
+        {
+            type: String,
+            default:null
+
+            // required: true
         }
     ],
     dateCreated:{
@@ -61,7 +76,7 @@ const productSchema = mongoose.Schema({
 
 productSchema.virtual('oldPrice').get(function () {
     if (this.discount > 0) {
-        return (this.price * 100) / this.discount;
+        return Math.round((this.price * 100) / (100-this.discount));
     }
     return this.price;
 });
@@ -74,7 +89,6 @@ productSchema.set('toJSON' , {
     virtuals: true,
 })
 
-productSchema.set('toJSON', { virtuals: true });
 
 exports.Product = mongoose.model('Product', productSchema);
 exports.productSchema = productSchema;

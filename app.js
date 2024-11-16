@@ -5,22 +5,31 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv/config');
 const fs = require("fs");
+const authJwt = require('./helper/jwt');
 
 app.use(cors());
 app.options('*', cors())
 
 //middleware
 app.use(bodyParser.json());
+app.use(express.json());
+// app.use(authJwt());
 
 //routes
 const categoryRoutes = require('./routes/categories');
 const brandRoutes = require('./routes/brand');
 const productRoutes = require('./routes/products');
+const userRoutes = require('./routes/user');
+const productSizeRoutes = require('./routes/productSize');
+const productColorRoutes = require('./routes/productColor');
 
 app.use('/upload', express.static("upload"))
 app.use('/api/category', categoryRoutes);
 app.use('/api/brand', brandRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/user', userRoutes);
+app.use('/api/productSize', productSizeRoutes);
+app.use('/api/productColor', productColorRoutes);
 
 mongoose.connect(process.env.CONNECTION_STRING, {
     useNewUrlParser: true,
