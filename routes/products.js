@@ -52,17 +52,24 @@ router.post('/upload', upload.array("images"), async (req, res) => {
 router.get('/', async (req,res)=>{
 
     const page = parseInt(req.query.page) || 1;
-    const perPage = 12;
+    const perPage = parseInt(req.query.perPage);
     const totalPosts = await Product.countDocuments();
     const totalPages = Math.ceil(totalPosts / perPage);
     if (page > totalPages) {
         return res.status(404).json({ message: "Page not found"})
     }
 
-    const productList = await Product.find().populate("category brand")
-            .skip((page -1) * perPage)
-            .limit(perPage)
-            .exec();
+    let productList=[];
+    if(req.query.catName!==undefined){
+         productList = await Product.find({catName:req.query.catName}).populate("category brand")
+    }else{
+
+         productList = await Product.find().populate("category brand")
+                .skip((page -1) * perPage)
+                .limit(perPage)
+                .exec();
+    }
+
 
 
     if(!productList){
@@ -110,18 +117,19 @@ router.post('/create', async (req,res)=>{
     let product = new Product({
         name:req.body.name,
         description:req.body.description,
-        // brand:req.body.brand,
         price:req.body.price,
         discount:req.body.discount,
+        catName:req.body.catName,
+        // brandName:req.body.brandName,
         category:req.body.category,
         brand:req.body.brand,
-        countInStock:req.body.countInStock,
         rating:req.body.rating,
         isNewProduct:req.body.isNewProduct,
         dateCreated:req.body.dateCreated,
-        productSize:req.body.productSize,
-        productColor:req.body.productColor,
-        images:imagesArr
+        // productSize:req.body.productSize,
+        // productColor:req.body.productColor,
+        images:imagesArr,
+        sizesAndColors: req.body.sizesAndColors
     });
 
     product = await product.save();
@@ -166,16 +174,17 @@ router.put('/:id', async(req,res)=>{
         {
             name:req.body.name,
             description:req.body.description,
-            // brand:req.body.brand,
             price:req.body.price,
             discount:req.body.discount,
+            catName:req.body.catName,
+            // brandName:req.body.brandName,
             category:req.body.category,
             brand:req.body.brand,
-            countInStock:req.body.countInStock,
             rating:req.body.rating,
-            isNewProduct:req.body.isNewProduct,
-            dateCreated:req.body.dateCreated,
+            // isNewProduct:req.body.isNewProduct,
+            // dateCreated:req.body.dateCreated,
             images:imagesArr,
+            sizesAndColors: req.body.sizesAndColors
         },
         {new: true}
     );

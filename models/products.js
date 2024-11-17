@@ -9,10 +9,6 @@ const productSchema = mongoose.Schema({
         type:String,
         required:true
     },
-    // brand:{
-    //     type:String,
-    //     default: ''
-    // },
     price:{
         type:Number,
         default: 0
@@ -21,6 +17,14 @@ const productSchema = mongoose.Schema({
         type:Number,
         default: 0
     },
+    catName:{
+        type:String,
+        default:''
+    },
+    // brandName:{
+    //     type:String,
+    //     default:''
+    // },
     category:{
         type:mongoose.Schema.Types.ObjectId,
         ref: 'Category',
@@ -30,10 +34,6 @@ const productSchema = mongoose.Schema({
         type:mongoose.Schema.Types.ObjectId,
         ref: 'Brand',
         required:true
-    },
-    countInStock:{
-        type:Number,
-        default: 0
     },
     rating:{
         type:Number,
@@ -53,19 +53,35 @@ const productSchema = mongoose.Schema({
             required: true
         }
     ],
-    productSize:[
-        {
-            type: String,
-            default:null
-            // required: true
-        }
-    ],
-    productColor:[
-        {
-            type: String,
-            default:null
+    // productSize:[
+    //     {
+    //         type: String,
+    //         default:null
+    //         // required: true
+    //     }
+    // ],
+    // productColor:[
+    //     {
+    //         type: String,
+    //         default:null
 
-            // required: true
+    //         // required: true
+    //     }
+    // ],
+    sizesAndColors: [
+        {
+            size: {
+                type: String,
+                required: true
+            },
+            color: {
+                type: String,
+                required: true
+            },
+            countInStock: {
+                type: Number,
+                default: 0
+            }
         }
     ],
     dateCreated:{
