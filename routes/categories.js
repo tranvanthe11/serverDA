@@ -8,6 +8,16 @@ const fs = require("fs");
 var imagesArr=[];
 var categoryEditId;
 
+const removeVietnameseTones = (str) => {
+    return str
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/đ/g, 'd')
+        .replace(/Đ/g, 'D')
+        .toLowerCase()
+        .replace(/\s+/g, '');
+};
+
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
       cb(null, "upload")
@@ -16,6 +26,7 @@ const storage = multer.diskStorage({
       cb(null, `${Date.now()}_${file.originalname}`)
     }
   })
+
 
 const upload = multer({ storage: storage })
 
@@ -41,6 +52,8 @@ router.post('/upload', upload.array("images"), async (req, res) => {
     return res.send(imagesArr);
 
 })
+
+
 
 router.get('/', async (req, res) => {
 
@@ -115,17 +128,20 @@ router.post('/create', async (req, res) => {
 
     let category = new Category({
         name:req.body.name,
+        nameNoAccent: removeVietnameseTones(req.body.name),
         images:imagesArr,
         color:req.body.color
     })
-    category = await category.save();
-
+    
     if(!category){
         return res.status(500).json({
             error: err,
             success: false
         })
     }
+    category = await category.save();
+
+    // imagesArr=[];
 
 
     return res.status(201).json(category);
@@ -140,6 +156,7 @@ router.put('/:id', async (req,res)=>{
         req.params.id,
         {
             name:req.body.name,
+            nameNoAccent: removeVietnameseTones(req.body.name),
             images:imagesArr,
             color:req.body.color
         },
@@ -152,6 +169,9 @@ router.put('/:id', async (req,res)=>{
             success:false
         })
     }
+
+    // imagesArr=[];
+
 
     return res.send(category);
 })

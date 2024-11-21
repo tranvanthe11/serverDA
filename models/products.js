@@ -21,10 +21,14 @@ const productSchema = mongoose.Schema({
         type:String,
         default:''
     },
-    // brandName:{
-    //     type:String,
-    //     default:''
-    // },
+    catId:{
+        type:String,
+        default:''
+    },
+    brandName:{
+        type:String,
+        default:''
+    },
     category:{
         type:mongoose.Schema.Types.ObjectId,
         ref: 'Category',

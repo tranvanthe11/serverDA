@@ -60,28 +60,81 @@ router.get('/', async (req,res)=>{
     }
 
     let productList=[];
-    if(req.query.catName!==undefined){
-         productList = await Product.find({catName:req.query.catName}).populate("category brand")
-    }else{
 
-         productList = await Product.find().populate("category brand")
-                .skip((page -1) * perPage)
-                .limit(perPage)
-                .exec();
+    if(req.query.minPrice !== undefined && req.query.maxPrice !== undefined){
+        const minPrice = parseInt(req.query.minPrice, 10);
+        const maxPrice = parseInt(req.query.maxPrice, 10);
+    
+        productList = await Product.find({
+            catId: req.query.catId,
+            price: { $gte: minPrice, $lte: maxPrice }
+        }).populate("category brand");
+
+        const filteredProducts = productList.filter(product => {
+            if(req.query.minPrice && product.price < parseInt(+req.query.minPrice)){
+                return false;
+            }
+            if(req.query.maxPrice && product.price > parseInt(+req.query.maxPrice)){
+                return false;
+            }
+            return true;
+        })
+        if(!productList){
+            return res.status(500).json({success: false})
+        }
+    
+        return res.status(200).json({
+            "products":productList,
+            "totalPages":totalPages,
+            "page":page
+        })
+
+    } else {
+        productList = await Product.find(req.query).populate("category brand")
+
+        if(!productList){
+            return res.status(500).json({success: false})
+        }
+    
+        return res.status(200).json({
+            "products":productList,
+            "totalPages":totalPages,
+            "page":page
+        })
     }
+//     if(req.query.catName!==undefined){
+//          productList = await Product.find({catName:req.query.catName}).populate("category brand")
+//     }else{
+
+//          productList = await Product.find().populate("category brand")
+//                 .skip((page -1) * perPage)
+//                 .limit(perPage)
+//                 .exec();
+//     }
+
+//     if(req.query.catId!==undefined){
+//         productList = await Product.find({catId:req.query.catId}).populate("category brand")
+//    }else{
+
+//         productList = await Product.find().populate("category brand")
+//                .skip((page -1) * perPage)
+//                .limit(perPage)
+//                .exec();
+//    }
+
+    // if(req.query.brandName!==undefined){
+    //     productList = await Product.find({brandName:req.query.brandName}).populate("category brand")
+    //     }else{
+
+    //             productList = await Product.find().populate("category brand")
+    //                 .skip((page -1) * perPage)
+    //                 .limit(perPage)
+    //                 .exec();
+    //     }
 
 
 
-    if(!productList){
-        return res.status(500).json({success: false})
-    }
-
-    return res.status(200).json({
-        "products":productList,
-        "totalPages":totalPages,
-        "page":page
-    })
-    return res.send(productList);
+    // return res.send(productList);
 })
 
 router.get('/newProduct', async (req,res)=>{
@@ -120,7 +173,8 @@ router.post('/create', async (req,res)=>{
         price:req.body.price,
         discount:req.body.discount,
         catName:req.body.catName,
-        // brandName:req.body.brandName,
+        catId:req.body.catId,
+        brandName:req.body.brandName,
         category:req.body.category,
         brand:req.body.brand,
         rating:req.body.rating,
@@ -139,6 +193,8 @@ router.post('/create', async (req,res)=>{
             success: false
         })
     }
+    // imagesArr=[];
+
     return res.status(201).json(product);
 })
 
@@ -177,7 +233,8 @@ router.put('/:id', async(req,res)=>{
             price:req.body.price,
             discount:req.body.discount,
             catName:req.body.catName,
-            // brandName:req.body.brandName,
+            catId:req.body.catId,
+            brandName:req.body.brandName,
             category:req.body.category,
             brand:req.body.brand,
             rating:req.body.rating,
@@ -195,6 +252,8 @@ router.put('/:id', async(req,res)=>{
             status: false
         })
     }
+
+    // imagesArr=[];
 
     return res.status(200).json({
         message: 'the product is updated',
