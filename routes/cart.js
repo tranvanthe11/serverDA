@@ -7,7 +7,7 @@ router.get('/', async (req, res) => {
 
     try{
     
-        const cartList = await Cart.find(req.query);
+        const cartList = await Cart.find(req.query).sort({ createdAt: -1 });;
         if(!cartList) {
             return res.status(500).json({ success: false})
         }
@@ -43,10 +43,32 @@ router.delete('/:id', async (req, res) => {
     })
 })
 
+router.delete('/clear/:userId', async (req, res) => {
+    const userId = req.params.userId;
+
+    try {
+        const result = await Cart.deleteMany({ userId: userId });
+        if (result.deletedCount === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "No items found in the cart for the given user ID",
+            });
+        }
+        return res.status(200).json({
+            success: true,
+            message: "All cart items for the user have been deleted!",
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "An error occurred while clearing the cart",
+        });
+    }
+});
 
 router.post('/add', async (req, res) => {
 
-    const cartItem = await Cart.find({ productId: req.body.productId});
+    const cartItem = await Cart.find({ productId: req.body.productId,  userId: req.body.userId});
     if(cartItem.length === 0){
         let cartList = new Cart({
             productTitle:req.body.productTitle,

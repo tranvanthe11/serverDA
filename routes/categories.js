@@ -4,6 +4,15 @@ const router = express.Router();
 
 const multer  = require('multer')
 const fs = require("fs");
+const streamifier = require('streamifier');
+
+const cloudinary = require('cloudinary').v2;
+
+cloudinary.config({
+  cloud_name: 'ddysmtgos',
+  api_key: '991825196762816',
+  api_secret: 'I9h83_jaSlJlcvbeCNSISMTzx-E',
+});
 
 var imagesArr=[];
 var categoryEditId;
@@ -18,41 +27,57 @@ const removeVietnameseTones = (str) => {
         .replace(/\s+/g, '');
 };
 
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-      cb(null, "upload")
-    },
-    filename: function (req, file, cb) {
-      cb(null, `${Date.now()}_${file.originalname}`)
-    }
-  })
+const storage = multer.memoryStorage();
 
 
 const upload = multer({ storage: storage })
 
 router.post('/upload', upload.array("images"), async (req, res) => {
-
-    if(categoryEditId!==undefined){
-        const category = await Category.findById(categoryEditId)
+    try {
+      if (categoryEditId !== undefined) {
+        const category = await Category.findById(categoryEditId);
         const images = category.images;
+  
+        if (images.length !== 0) {
+          for (let image of images) {
+            const publicId = image.split('/').pop().split('.')[0];
+            await cloudinary.uploader.destroy(publicId);
+          }
+        }
+      }
+  
+      imagesArr = [];
+      const files = req.files;
 
-        // if(images.length !==0){
-        //     for(image of images){
-        //         fs.unlinkSync(`upload/${image}`)
-        //     }
-        // }
+      const uploadPromises = files.map((file) => {
+        return new Promise((resolve, reject) => {
+          const uploadStream = cloudinary.uploader.upload_stream(
+            { resource_type: 'auto' },
+            (error, result) => {
+              if (error) {
+                return reject(error);
+              }
+              imagesArr.push(result.secure_url);
+              resolve();
+            }
+          );
+  
+          // Chuyển buffer thành stream và đẩy vào uploadStream
+          streamifier.createReadStream(file.buffer).pipe(uploadStream);
+        });
+      });
+
+      // Chờ tất cả ảnh tải lên xong
+      await Promise.all(uploadPromises);
+
+      return res.send({ images: imagesArr });
+      
+    } catch (error) {
+      console.log(error);
+      return res.status(500).send("Lỗi trong quá trình tải ảnh lên Cloudinary");
     }
-    imagesArr=[];
-    const files = req.files;
-
-    for(let i=0; i<files.length; i++) {
-        imagesArr.push(files[i].filename);
-    }
-
-    return res.send(imagesArr);
-
-})
-
+});
+  
 
 
 router.get('/', async (req, res) => {
@@ -100,14 +125,7 @@ router.get('/:id', async (req, res) => {
 
 router.delete('/:id', async (req, res) => {
 
-    const category = await Category.findById(req.params.id);
-    const images = category.images;
 
-    if(images.length!==0){
-        for(image of images){
-            fs.unlinkSync(`upload/${image}`);
-        }
-    }
     const deleteUser = await Category.findByIdAndDelete(req.params.id);
 
     if(!deleteUser){
@@ -141,8 +159,6 @@ router.post('/create', async (req, res) => {
     }
     category = await category.save();
 
-    // imagesArr=[];
-
 
     return res.status(201).json(category);
 
@@ -151,13 +167,15 @@ router.post('/create', async (req, res) => {
 
 router.put('/:id', async (req,res)=>{
 
+    let updatedImages = req.body.images || [];
+
 
     const category = await Category.findByIdAndUpdate(
         req.params.id,
         {
             name:req.body.name,
             nameNoAccent: removeVietnameseTones(req.body.name),
-            images:imagesArr,
+            images:updatedImages,
             color:req.body.color
         },
         {new:true}
@@ -169,9 +187,6 @@ router.put('/:id', async (req,res)=>{
             success:false
         })
     }
-
-    // imagesArr=[];
-
 
     return res.send(category);
 })

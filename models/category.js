@@ -19,6 +19,9 @@ const categorySchema = mongoose.Schema({
         type: String,
         required: true,
     },
+},
+{ 
+    timestamps: true 
 });
 
 categorySchema.virtual('id').get(function () {

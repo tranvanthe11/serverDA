@@ -5,6 +5,9 @@ const productSizeSchema = mongoose.Schema({
         type: String,
         default: null
     }
+},
+{ 
+    timestamps: true 
 })
 
 productSizeSchema.virtual('id').get(function () {

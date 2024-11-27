@@ -5,6 +5,9 @@ const productColorSchema = mongoose.Schema({
         type: String,
         default: null
     }
+},
+{ 
+    timestamps: true 
 })
 
 productColorSchema.virtual('id').get(function () {

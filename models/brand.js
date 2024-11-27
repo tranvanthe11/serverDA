@@ -10,7 +10,10 @@ const brandSchema = mongoose.Schema({
     brand:{
         type: String,
         required:true
-    }
+    },
+},
+{ 
+    timestamps: true 
 })
 
 brandSchema.virtual('id').get(function () {

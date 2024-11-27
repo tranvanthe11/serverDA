@@ -5,49 +5,71 @@ const {Product} = require('../models/products');
 const multer  = require('multer')
 const fs = require("fs");
 
+const streamifier = require('streamifier');
+
+const cloudinary = require('cloudinary').v2;
+
+cloudinary.config({
+  cloud_name: 'ddysmtgos',
+  api_key: '991825196762816',
+  api_secret: 'I9h83_jaSlJlcvbeCNSISMTzx-E',
+});
+
 var imagesArr=[];
 var productEditId;
 
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-      cb(null, "upload")
-    },
-    filename: function (req, file, cb) {
-      cb(null, `${Date.now()}_${file.originalname}`)
-    }
-  })
-
+const storage = multer.memoryStorage();
 const upload = multer({ storage: storage })
 
 router.post('/upload', upload.array("images"), async (req, res) => {
-    let images;
-
-    if(productEditId!==undefined){
-        const product = await Product.findById(productEditId)
-        
-        if(product) {
-            images = product.images;
+    try {
+      imagesArr = [];
+  
+      if (productEditId !== undefined) {
+        const product = await Product.findById(productEditId);
+        const images = product.images;
+  
+        if (images.length !== 0) {
+          for (let image of images) {
+            const publicId = image.split('/').pop().split('.')[0];
+            await cloudinary.uploader.destroy(publicId);
+          }
         }
-
-        if(images.length !==0){
-            for(image of images){
-                if (fs.existsSync(`upload/${image}`)) {
-                    fs.unlinkSync(`upload/${image}`);
-                }
+  
+        imagesArr = [];
+      }
+  
+      const files = req.files;
+  
+      const tempImagesArr = [];
+      const uploadPromises = files.map((file) => {
+        return new Promise((resolve, reject) => {
+          const uploadStream = cloudinary.uploader.upload_stream(
+            { resource_type: 'auto' },
+            (error, result) => {
+              if (error) return reject(error);
+              tempImagesArr.push(result.secure_url);
+              resolve();
             }
-            productEditId="";
-        }
+          );
+          streamifier.createReadStream(file.buffer).pipe(uploadStream);
+        });
+      });
+  
+      await Promise.all(uploadPromises);
+  
+      imagesArr = [...tempImagesArr];
+  
+      console.log(imagesArr);
+  
+      return res.send({ images: imagesArr });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).send("Lỗi trong quá trình tải ảnh lên Cloudinary");
     }
-    imagesArr=[];
-    const files = req.files;
-
-    for(let i=0; i<files.length; i++) {
-        imagesArr.push(files[i].filename);
-    }
-
-    return res.send(imagesArr);
-
-})
+  });
+  
+  
 
 router.get('/', async (req,res)=>{
 
@@ -68,7 +90,8 @@ router.get('/', async (req,res)=>{
         productList = await Product.find({
             catId: req.query.catId,
             price: { $gte: minPrice, $lte: maxPrice }
-        }).populate("category brand");
+        }).populate("category brand")
+        .sort({ createdAt: -1 });
 
         const filteredProducts = productList.filter(product => {
             if(req.query.minPrice && product.price < parseInt(+req.query.minPrice)){
@@ -90,7 +113,7 @@ router.get('/', async (req,res)=>{
         })
 
     } else {
-        productList = await Product.find(req.query).populate("category brand")
+        productList = await Product.find(req.query).populate("category brand").sort({ createdAt: -1 })
 
         if(!productList){
             return res.status(500).json({success: false})
@@ -138,7 +161,7 @@ router.get('/', async (req,res)=>{
 })
 
 router.get('/newProduct', async (req,res)=>{
-    const productList = await Product.find({isNewProduct: true}).populate("category brand");
+    const productList = await Product.find({isNewProduct: true}).populate("category brand").sort({ createdAt: -1 });
 
     if(!productList){
         return res.status(500).json({success: false})
@@ -180,10 +203,9 @@ router.post('/create', async (req,res)=>{
         rating:req.body.rating,
         isNewProduct:req.body.isNewProduct,
         dateCreated:req.body.dateCreated,
-        // productSize:req.body.productSize,
-        // productColor:req.body.productColor,
         images:imagesArr,
-        sizesAndColors: req.body.sizesAndColors
+        sizesAndColors: req.body.sizesAndColors,
+        sold:req.body.sold
     });
 
     product = await product.save();
@@ -199,15 +221,6 @@ router.post('/create', async (req,res)=>{
 })
 
 router.delete('/:id', async(req,res)=>{
-
-    const product = await Product.findById(req.params.id);
-    const images = product.images;
-
-    if(images.length!==0){
-        for(image of images){
-            fs.unlinkSync(`upload/${image}`);
-        }
-    }
 
     const deleteProduct = await Product.findByIdAndDelete(req.params.id);
     if(!deleteProduct){
@@ -225,6 +238,8 @@ router.delete('/:id', async(req,res)=>{
 
 router.put('/:id', async(req,res)=>{
 
+    let updatedImages = req.body.images || [];
+
     const product = await Product.findByIdAndUpdate(
         req.params.id,
         {
@@ -238,10 +253,9 @@ router.put('/:id', async(req,res)=>{
             category:req.body.category,
             brand:req.body.brand,
             rating:req.body.rating,
-            // isNewProduct:req.body.isNewProduct,
-            // dateCreated:req.body.dateCreated,
-            images:imagesArr,
-            sizesAndColors: req.body.sizesAndColors
+            images:updatedImages,
+            sizesAndColors: req.body.sizesAndColors,
+            sold: req.body.sold
         },
         {new: true}
     );

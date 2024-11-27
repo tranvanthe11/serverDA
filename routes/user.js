@@ -67,7 +67,7 @@ router.post(`/signin`, async (req, res) => {
 })
 
 router.get(`/`, async (req, res) => {
-    const userList = await User.find();
+    const userList = await User.find().sort({ createdAt: -1 });;
 
     if(!userList) {
         res.status(500).json({success: false})

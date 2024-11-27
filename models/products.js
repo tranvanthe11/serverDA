@@ -57,21 +57,6 @@ const productSchema = mongoose.Schema({
             required: true
         }
     ],
-    // productSize:[
-    //     {
-    //         type: String,
-    //         default:null
-    //         // required: true
-    //     }
-    // ],
-    // productColor:[
-    //     {
-    //         type: String,
-    //         default:null
-
-    //         // required: true
-    //     }
-    // ],
     sizesAndColors: [
         {
             size: {
@@ -91,7 +76,14 @@ const productSchema = mongoose.Schema({
     dateCreated:{
         type:Date,
         default: Date.now
-    }
+    },
+    sold: {
+        type: Number, 
+        default: 0  
+    },
+},
+{ 
+    timestamps: true 
 })
 
 productSchema.virtual('oldPrice').get(function () {

@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const cartSchema = mongoose.Schema({
+const myListSchema = mongoose.Schema({
     productTitle: {
         type: String,
         required: true,
@@ -9,23 +9,7 @@ const cartSchema = mongoose.Schema({
         type: String,
         required: true,
     },
-    color: {
-        type: String,
-        required: true,
-    },
-    size: {
-        type: String,
-        required: true,
-    },
     price: {
-        type: Number,
-        required: true,
-    },
-    quantity: {
-        type: Number,
-        required: true,
-    },
-    subTotal: {
         type: Number,
         required: true,
     },
@@ -40,17 +24,15 @@ const cartSchema = mongoose.Schema({
 },
 { 
     timestamps: true 
-}
-);
+});
 
-
-cartSchema.virtual('id').get(function () {
+myListSchema.virtual('id').get(function () {
     return this._id.toHexString();
 })
 
-cartSchema.set('toJSON' , {
+myListSchema.set('toJSON' , {
     virtuals: true,
 })
 
-exports.Cart = mongoose.model('Cart', cartSchema);
-exports.cartSchema = cartSchema;
+exports.MyList = mongoose.model('MyList', myListSchema);
+exports.myListSchema = myListSchema;

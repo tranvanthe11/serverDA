@@ -23,7 +23,11 @@ const userSchema = mongoose.Schema({
         type:Boolean,
         default: false
     }
-})
+},
+{ 
+    timestamps: true 
+}
+)
 
 userSchema.virtual('id').get(function () {
     return this._id.toHexString();
