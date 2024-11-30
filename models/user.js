@@ -22,6 +22,16 @@ const userSchema = mongoose.Schema({
     isAdmin:{
         type:Boolean,
         default: false
+    },
+    images: [
+        {
+            type: String,
+            required: true,
+        },
+    ],
+    isBlock:{
+        type:Boolean,
+        default: false
     }
 },
 { 
