@@ -9,11 +9,15 @@ const productSchema = mongoose.Schema({
         type:String,
         required:true
     },
+    costPrice: {
+        type: Number,
+        default: 0,
+    },
     price:{
         type:Number,
         default: 0
     },
-    discount:{
+    oldPrice:{
         type:Number,
         default: 0
     },
@@ -70,12 +74,24 @@ const productSchema = mongoose.Schema({
             countInStock: {
                 type: Number,
                 default: 0
-            }
+            },
+            dateStockIn: {
+                type: Date,
+                default: () => new Date(Date.now() + 7 * 60 * 60 * 1000)
+            },
+            isPromotion: {
+                type: Boolean,
+                default: false,
+            },
+            promotionDiscount: {
+                type: Number,
+                default: 0,
+            },
         }
     ],
     dateCreated:{
         type:Date,
-        default: Date.now
+        default: () => new Date(Date.now() + 7 * 60 * 60 * 1000)
     },
     sold: {
         type: Number, 
@@ -86,11 +102,8 @@ const productSchema = mongoose.Schema({
     timestamps: true 
 })
 
-productSchema.virtual('oldPrice').get(function () {
-    if (this.discount > 0) {
-        return Math.round((this.price * 100) / (100-this.discount));
-    }
-    return this.price;
+productSchema.virtual('discount').get(function () {
+        return Math.round((1 - this.price/this.oldPrice)*100);
 });
 
 productSchema.virtual('id').get(function () {

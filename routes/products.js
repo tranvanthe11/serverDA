@@ -125,39 +125,6 @@ router.get('/', async (req,res)=>{
             "page":page
         })
     }
-//     if(req.query.catName!==undefined){
-//          productList = await Product.find({catName:req.query.catName}).populate("category brand")
-//     }else{
-
-//          productList = await Product.find().populate("category brand")
-//                 .skip((page -1) * perPage)
-//                 .limit(perPage)
-//                 .exec();
-//     }
-
-//     if(req.query.catId!==undefined){
-//         productList = await Product.find({catId:req.query.catId}).populate("category brand")
-//    }else{
-
-//         productList = await Product.find().populate("category brand")
-//                .skip((page -1) * perPage)
-//                .limit(perPage)
-//                .exec();
-//    }
-
-    // if(req.query.brandName!==undefined){
-    //     productList = await Product.find({brandName:req.query.brandName}).populate("category brand")
-    //     }else{
-
-    //             productList = await Product.find().populate("category brand")
-    //                 .skip((page -1) * perPage)
-    //                 .limit(perPage)
-    //                 .exec();
-    //     }
-
-
-
-    // return res.send(productList);
 })
 
 router.get('/newProduct', async (req,res)=>{
@@ -194,7 +161,8 @@ router.post('/create', async (req,res)=>{
         name:req.body.name,
         description:req.body.description,
         price:req.body.price,
-        discount:req.body.discount,
+        oldPrice:req.body.oldPrice,
+        costPrice:req.body.costPrice,
         catName:req.body.catName,
         catId:req.body.catId,
         brandName:req.body.brandName,
@@ -246,7 +214,8 @@ router.put('/:id', async(req,res)=>{
             name:req.body.name,
             description:req.body.description,
             price:req.body.price,
-            discount:req.body.discount,
+            oldPrice:req.body.oldPrice,
+            costPrice:req.body.costPrice,
             catName:req.body.catName,
             catId:req.body.catId,
             brandName:req.body.brandName,
@@ -267,13 +236,37 @@ router.put('/:id', async(req,res)=>{
         })
     }
 
-    // imagesArr=[];
-
     return res.status(200).json({
         message: 'the product is updated',
         status: true
     })
 })
+
+router.put('/stock-in/:id', async (req, res) => {
+    const { size, color, quantity } = req.body;
+
+    const product = await Product.findById(req.params.id);
+
+    if (!product) {
+        return res.status(404).json({ success: false, message: 'Product not found' });
+    }
+
+    const sizeColorStock = product.sizesAndColors.find(
+        (sc) => sc.size === size && sc.color === color
+    );
+
+    if (!sizeColorStock) {
+        return res.status(404).json({ success: false, message: 'Size and color not found' });
+    }
+
+    sizeColorStock.countInStock += quantity;
+    sizeColorStock.dateStockIn = new Date();
+
+    await product.save();
+
+    return res.status(200).json({ success: true, message: 'Stock updated successfully' });
+});
+
 
 
 

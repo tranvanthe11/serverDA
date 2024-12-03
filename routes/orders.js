@@ -1,6 +1,8 @@
 const { Orders } = require('../models//orders');
+const { Product } = require('../models/products');
 const express = require('express');
 const router = express.Router();
+
 
 
 router.get('/', async (req, res) => {
@@ -66,6 +68,29 @@ router.delete('/:id', async (req, res) => {
 
 
 router.post('/create', async (req, res) => {
+    const { products } = req.body;
+
+    for (const item of products) {
+        const product = await Product.findById(item.productId);
+
+        if (!product) {
+            return res.status(404).json({ message: `Product ${item.productId} not found` });
+        }
+
+        const sizeColorStock = product.sizesAndColors.find(
+            (sc) => sc.size === item.size && sc.color === item.color
+        );
+
+        if (!sizeColorStock || sizeColorStock.countInStock < item.quantity) {
+            return res.status(400).json({
+                message: `Not enough stock for product ${item.productTitle} (${item.size} - ${item.color})`,
+            });
+        }
+
+        sizeColorStock.countInStock -= item.quantity;
+        product.sold += item.quantity;
+        await product.save();
+    }
 
     let order = new Orders({
         name:req.body.name,
@@ -90,8 +115,27 @@ router.post('/create', async (req, res) => {
 
 })
 
-router.put('/:id', async (req,res)=>{
+const updateStockOnStatusChange = async (products) => {
+    for (const item of products) {
+        const product = await Product.findById(item.productId);
 
+        if (!product) {
+            throw new Error(`Product ${item.productId} not found`);
+        }
+
+        const sizeColorStock = product.sizesAndColors.find(
+            (sc) => sc.size === item.size && sc.color === item.color
+        );
+
+        if (sizeColorStock) {
+            sizeColorStock.countInStock += item.quantity;
+            product.sold -= item.quantity;
+            await product.save();
+        }
+    }
+};
+
+router.put('/:id', async (req,res)=>{
 
     const order = await Orders.findByIdAndUpdate(
         req.params.id,
@@ -116,8 +160,46 @@ router.put('/:id', async (req,res)=>{
         })
     }
 
+    if (['cancel', 'refund'].includes(order.status)) {
+        await updateStockOnStatusChange(order.products);
+    }
+
 
     return res.send(order);
 })
+router.get('/revenue-and-profit', async (req, res) => {
+    try {
+        // Lấy danh sách đơn hàng đã hoàn thành
+        const completedOrders = await Orders.find({ status: 'done' });
+        console.log(completedOrders)
+
+        // Tính tổng doanh thu (revenue)
+        const revenue = completedOrders.reduce((total, order) => total + order.amount, 0);
+
+        // Tính tổng giá vốn hàng bán (COGS)
+        let totalCost = 0;
+        for (const order of completedOrders) {
+            for (const product of order.products) {
+                const productDetails = await Product.findById(product.productId); // Tìm sản phẩm
+                if (productDetails) {
+                    const cost = productDetails.costPrice * product.quantity; // Giá vốn = Giá gốc * Số lượng
+                    totalCost += cost;
+                }
+            }
+        }
+
+        // Tính lợi nhuận (profit)
+        const profit = revenue - totalCost;
+
+        return res.status(200).json({
+            revenue,
+            profit,
+            totalCost,
+        });
+    } catch (error) {
+        console.error("Error calculating revenue and profit:", error);
+        return res.status(500).json({ success: false, message: "Failed to calculate revenue and profit." });
+    }
+});
 
 module.exports = router;
