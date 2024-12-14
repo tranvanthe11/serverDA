@@ -53,10 +53,10 @@ app.use('/api/addresses', addressestRoutes);
 //     useFindAndModify: false,
 // })
 
-mongoose.connect('mongodb+srv://Tranvanthe:kbpLqxPxr8VYX3fB@ac-ulpsapy.6eyckfe.mongodb.net/shopping?retryWrites=true&w=majority', {
+mongoose.connect('mongodb://Tranvanthe:kbpLqxPxr8VYX3fB@ac-ulpsapy-shard-00-00.6eyckfe.mongodb.net:27017,ac-ulpsapy-shard-00-01.6eyckfe.mongodb.net:27017,ac-ulpsapy-shard-00-02.6eyckfe.mongodb.net:27017/shopping?ssl=true&replicaSet=atlas-egkr0n-shard-0&authSource=admin&retryWrites=true&w=majority', {
   useNewUrlParser: true,
-     useUnifiedTopology: true,
-     useFindAndModify: false,
+  useUnifiedTopology: true,
+  useFindAndModify: false,
 })
 .then(()=>{
     console.log('database connection is ready...')
