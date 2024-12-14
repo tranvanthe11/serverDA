@@ -47,17 +47,12 @@ app.use('/api/leftBanner', leftBannerRoutes);
 app.use('/api/revenue-and-profit', revenueAndProfitRoutes);
 app.use('/api/addresses', addressestRoutes);
 
-// mongoose.connect(process.env.CONNECTION_STRING, {
-//     useNewUrlParser: true,
-//     useUnifiedTopology: true,
-//     useFindAndModify: false,
-// })
-
-mongoose.connect('mongodb://Tranvanthe:kbpLqxPxr8VYX3fB@ac-ulpsapy-shard-00-00.6eyckfe.mongodb.net:27017,ac-ulpsapy-shard-00-01.6eyckfe.mongodb.net:27017,ac-ulpsapy-shard-00-02.6eyckfe.mongodb.net:27017/shopping?ssl=true&replicaSet=atlas-egkr0n-shard-0&authSource=admin&retryWrites=true&w=majority', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  useFindAndModify: false,
+mongoose.connect(process.env.CONNECTION_STRING, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useFindAndModify: false,
 })
+
 .then(()=>{
     console.log('database connection is ready...')
     //server
