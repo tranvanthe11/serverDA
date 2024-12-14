@@ -57,7 +57,7 @@ mongoose.connect('mongodb+srv://Tranvanthe:kbpLqxPxr8VYX3fB@ac-ulpsapy.6eyckfe.m
   useNewUrlParser: true,
      useUnifiedTopology: true,
      useFindAndModify: false,
-});
+})
 .then(()=>{
     console.log('database connection is ready...')
     //server
