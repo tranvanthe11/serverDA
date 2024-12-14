@@ -54,10 +54,11 @@ mongoose.connect(process.env.CONNECTION_STRING, {
 })
 
 .then(()=>{
+    const port = process.env.PORT || 4000;
     console.log('database connection is ready...')
     //server
     app.listen(process.env.PORT, () => {
-        console.log(`Server is running http://localhost:${process.env.PORT}`);
+        console.log(`Server is running http://localhost:${port}`);
     })
 })
 .catch((err)=> {
