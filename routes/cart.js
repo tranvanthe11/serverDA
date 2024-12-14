@@ -72,6 +72,7 @@ router.post('/add', async (req, res) => {
     if(cartItem.length === 0){
         let cartList = new Cart({
             productTitle:req.body.productTitle,
+            catName:req.body.catName,
             images:req.body.images,
             color:req.body.color,
             size:req.body.size,
@@ -103,6 +104,7 @@ router.put('/:id', async (req,res)=>{
         req.params.id,
         {
             productTitle:req.body.productTitle,
+            catName:req.body.catName,
             images:req.body.images,
             color:req.body.color,
             size:req.body.size,

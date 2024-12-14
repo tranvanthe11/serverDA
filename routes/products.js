@@ -136,6 +136,18 @@ router.get('/newProduct', async (req,res)=>{
 
     return res.status(200).json(productList)
 })
+router.get('/promotions', async (req, res) => {
+    try {
+        // Tìm sản phẩm có ít nhất một phần tử trong sizesAndColors với isPromotion: true
+        const products = await Product.find({
+            sizesAndColors: { $elemMatch: { isPromotion: true } }
+        }).populate('category').populate('brand'); // Thêm populate nếu cần
+
+        res.status(200).json({ products });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
 
 router.get('/:id', async (req, res) => {
 
@@ -265,6 +277,49 @@ router.put('/stock-in/:id', async (req, res) => {
     await product.save();
 
     return res.status(200).json({ success: true, message: 'Stock updated successfully' });
+});
+
+// Áp dụng khuyến mãi cho một số lượng nhất định
+router.post('/promote/:id', async (req, res) => {
+    const { size, color, promotionDiscount, promotionQuantity } = req.body; // Thêm số lượng khuyến mãi
+
+    const product = await Product.findById(req.params.id);
+
+    if (!product) {
+        return res.status(404).json({ success: false, message: 'Product not found' });
+    }
+
+    const sizeColorStock = product.sizesAndColors.find(
+        (sc) => sc.size === size && sc.color === color
+    );
+
+    if (!sizeColorStock) {
+        return res.status(404).json({ success: false, message: 'Size and color not found' });
+    }
+
+    if (promotionQuantity > sizeColorStock.countInStock) {
+        return res.status(400).json({ success: false, message: 'Promotion quantity exceeds stock count' });
+    }
+
+    sizeColorStock.isPromotion = true;
+    sizeColorStock.promotionDiscount = promotionDiscount;
+    sizeColorStock.pricePromotion =
+        product.oldPrice - (product.oldPrice * sizeColorStock.promotionDiscount) / 100; 
+    sizeColorStock.promotionQuantity = promotionQuantity; 
+
+    await product.save();
+
+    return res.status(200).json({
+        success: true,
+        message: 'Promotion applied successfully',
+        promotionDetails: {
+            size: sizeColorStock.size,
+            color: sizeColorStock.color,
+            discount: sizeColorStock.promotionDiscount,
+            pricePromotion: sizeColorStock.pricePromotion,
+            promotionQuantity: sizeColorStock.promotionQuantity,
+        },
+    });
 });
 
 

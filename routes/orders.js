@@ -89,6 +89,19 @@ router.post('/create', async (req, res) => {
 
         sizeColorStock.countInStock -= item.quantity;
         product.sold += item.quantity;
+
+        if (sizeColorStock.isPromotion) {
+            sizeColorStock.quantitySold += item.quantity;
+
+            // Nếu đã bán hết số lượng khuyến mãi, tự động hủy khuyến mãi
+            if (sizeColorStock.quantitySold >= sizeColorStock.promotionQuantity) {
+                sizeColorStock.isPromotion = false;
+                sizeColorStock.promotionDiscount = 0;
+                sizeColorStock.pricePromotion = 0;
+                sizeColorStock.promotionQuantity = 0;
+                sizeColorStock.quantitySold = 0;
+            }
+        }
         await product.save();
     }
 

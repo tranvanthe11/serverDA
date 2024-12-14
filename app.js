@@ -27,7 +27,9 @@ const productReviewsRoutes = require('./routes/productReviews');
 const myListRoutes = require('./routes/myList');
 const ordersRoutes = require('./routes/orders');
 const homeBannerRoutes = require('./routes/homeBanner');
+const leftBannerRoutes = require('./routes/leftBanner');
 const revenueAndProfitRoutes = require('./routes/revenueAndProfit');
+const addressestRoutes = require('./routes/addresses');
 
 app.use('/upload', express.static("upload"))
 app.use('/api/category', categoryRoutes);
@@ -41,7 +43,9 @@ app.use('/api/productReviews', productReviewsRoutes);
 app.use('/api/myList', myListRoutes);
 app.use('/api/orders', ordersRoutes);
 app.use('/api/homeBanner', homeBannerRoutes);
+app.use('/api/leftBanner', leftBannerRoutes);
 app.use('/api/revenue-and-profit', revenueAndProfitRoutes);
+app.use('/api/addresses', addressestRoutes);
 
 mongoose.connect(process.env.CONNECTION_STRING, {
     useNewUrlParser: true,

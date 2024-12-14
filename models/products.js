@@ -87,6 +87,18 @@ const productSchema = mongoose.Schema({
                 type: Number,
                 default: 0,
             },
+            pricePromotion: {
+                type: Number,
+                default: 0,
+            },
+            promotionQuantity: {
+                type: Number,
+                default: 0,
+            },
+            quantitySold: {
+                type: Number,
+                default: 0,
+            },
         }
     ],
     dateCreated:{

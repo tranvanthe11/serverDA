@@ -34,6 +34,9 @@ const ordersSchema = mongoose.Schema({
             productTitle: {
                 type: String
             },
+            catName: {
+                type: String
+            },
             productId: {
                 type: String
             },
